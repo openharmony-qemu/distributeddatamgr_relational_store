@@ -635,8 +635,9 @@ std::pair<int32_t, int32_t> SqliteStatement::GetColumnType(int index) const
 
     const char *decl = sqlite3_column_decltype(stmt_, index);
     if (decl == nullptr) {
-        LOG_ERROR("invalid type %{public}d, errno %{public}d.", type, errno);
-        return { E_ERROR, int32_t(ColumnType::TYPE_NULL) };
+        // Literal, bound and computed BLOB columns have no declared SQL type.
+        // Their runtime SQLite type is sufficient for an ordinary byte value.
+        return { E_OK, int32_t(ColumnType::TYPE_BLOB) };
     }
 
     auto declType = StringUtils::TruncateAfterFirstParen(SqliteUtils::StrToUpper(decl));
@@ -734,6 +735,10 @@ ValueObject SqliteStatement::GetValueFromBlob(int32_t index, int32_t type) const
 {
     int size = sqlite3_column_bytes(stmt_, index);
     auto blob = static_cast<const uint8_t *>(sqlite3_column_blob(stmt_, index));
+    if (type == static_cast<int32_t>(ColumnType::TYPE_BLOB) && size == 0) {
+        // SQLite may return nullptr for X''; an empty BLOB is distinct from NULL.
+        return ValueObject(std::vector<uint8_t>());
+    }
     if (blob == nullptr || size <= 0) {
         return ValueObject();
     }

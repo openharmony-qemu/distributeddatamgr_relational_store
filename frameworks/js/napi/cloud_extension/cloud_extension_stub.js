@@ -23,6 +23,12 @@ const MAX_SIZE = 4 * 1024 * 1024 * 1024 - 1;
 
 export let cloudExtension;
 (function (a) {
+    let operationFlag;
+    (function (flag) {
+        flag[flag["INSERT"] = 0] = "INSERT";
+        flag[flag["UPDATE"] = 1] = "UPDATE";
+        flag[flag["DELETE"] = 2] = "DELETE";
+    })(operationFlag = a.Flag || (a.Flag = {}));
     let f;
     (function (f) {
         f[f["NULL"] = 0] = "NULL";
@@ -925,6 +931,7 @@ export default {
     cloudExtension,
     FieldType: cloudExtension.FieldType,
     ErrorCode: cloudExtension.ErrorCode,
+    Flag: cloudExtension.Flag,
     createCloudServiceStub: cloudExtension.createCloudServiceStub,
     createCloudDBStub: cloudExtension.createCloudDBStub,
     createAssetLoaderStub: cloudExtension.createAssetLoaderStub,
